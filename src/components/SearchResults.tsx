@@ -75,21 +75,35 @@ export function SearchResults({ results, loading, searchQuery, currentPage, item
 
   if (results.length === 0) {
     return (
-      <div className="text-muted-foreground py-12">
-        <Search className="h-12 w-12 mb-4 opacity-30" />
-        <p className="text-lg">Start searching to find research from your repository</p>
-        <p className="text-sm mt-1 opacity-70">Search across Monday.com, Confluence, SharePoint, Jira, and Lucid boards</p>
+      <div className="bg-slate-50/50 dark:bg-slate-950/30 border border-slate-200/50 dark:border-slate-800/30 rounded-xl p-12">
+        <div className="text-center text-muted-foreground">
+          <div className="bg-slate-100 dark:bg-slate-800 p-4 rounded-full w-fit mx-auto mb-4">
+            <Search className="h-8 w-8 text-slate-400" />
+          </div>
+          <p className="text-lg font-medium mb-2">No search results yet</p>
+          <p className="text-sm opacity-70 max-w-md mx-auto">
+            {searchQuery 
+              ? `No results found for "${searchQuery}". Try different keywords or check your filters.`
+              : "Start searching to find research from your repository. Search across Monday.com, Confluence, SharePoint, Jira, and Lucid boards."
+            }
+          </p>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="space-y-4">
+    <div className="bg-slate-50/50 dark:bg-slate-950/30 border border-slate-200/50 dark:border-slate-800/30 rounded-xl p-6 space-y-4">
       <div className="flex items-center justify-between">
-        <p className="text-muted-foreground text-sm">
-          {results.length} {results.length === 1 ? 'result' : 'results'} found
-          {searchQuery && ` for "${searchQuery}"`}
-        </p>
+        <div className="flex items-center gap-2">
+          <div className="bg-slate-500/10 p-1.5 rounded-md">
+            <Search className="h-4 w-4 text-slate-500" />
+          </div>
+          <p className="text-slate-700 dark:text-slate-300 text-sm font-medium">
+            {results.length} {results.length === 1 ? 'result' : 'results'} found
+            {searchQuery && ` for "${searchQuery}"`}
+          </p>
+        </div>
       </div>
       
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">

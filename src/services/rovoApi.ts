@@ -60,9 +60,45 @@ export interface JiraIssue {
   };
 }
 
+export interface UploadedDocument {
+  id: string;
+  filename: string;
+  fileType: 'pdf' | 'docx' | 'csv' | 'txt' | 'xlsx' | 'pptx';
+  uploadedAt: string;
+  fileSize: number;
+  filePath: string;
+  
+  // Extracted content
+  extractedText: string;
+  summary?: string;
+  keywords: string[];
+  
+  // Vector embedding for semantic search
+  embedding?: number[];
+  
+  // Metadata
+  metadata: {
+    title?: string;
+    author?: string;
+    pages?: number;
+    createdDate?: string;
+  };
+}
+
+export interface DocumentSearchResult {
+  document: UploadedDocument;
+  matchScore: number;
+  matchedSections: Array<{
+    text: string;
+    context: string;
+    page?: number;
+  }>;
+}
+
 export interface RovoSearchResult {
   confluence: ConfluencePage[];
   jira: JiraIssue[];
+  documents: DocumentSearchResult[];
 }
 
 class RovoApiClient {
@@ -186,7 +222,7 @@ class RovoApiClient {
 
   async searchAll(query: string): Promise<RovoSearchResult> {
     if (!query || query.trim().length === 0) {
-      return { confluence: [], jira: [] };
+      return { confluence: [], jira: [], documents: [] };
     }
 
     const [confluence, jira] = await Promise.all([
@@ -194,7 +230,7 @@ class RovoApiClient {
       this.searchJira(query)
     ]);
 
-    return { confluence, jira };
+    return { confluence, jira, documents: [] };
   }
 
   // Get recent content without search query
@@ -204,7 +240,7 @@ class RovoApiClient {
       this.getRecentJiraIssues(limit)
     ]);
 
-    return { confluence, jira };
+    return { confluence, jira, documents: [] };
   }
 
   async getRecentConfluencePages(limit: number): Promise<ConfluencePage[]> {
@@ -370,6 +406,32 @@ class RovoApiClient {
         message: `Jira access error: ${error instanceof Error ? error.message : 'Unknown error'}`
       };
     }
+  }
+
+  // Document search integration
+  async searchDocuments(query: string, limit: number = 25): Promise<DocumentSearchResult[]> {
+    try {
+      // This will be implemented when we integrate the document service
+      console.log('Document search not yet integrated with main API client');
+      return [];
+    } catch (error) {
+      console.error('Error searching documents:', error);
+      return [];
+    }
+  }
+
+  async searchAllWithDocuments(query: string): Promise<RovoSearchResult> {
+    if (!query || query.trim().length === 0) {
+      return { confluence: [], jira: [], documents: [] };
+    }
+
+    const [confluence, jira, documents] = await Promise.all([
+      this.searchConfluence(query),
+      this.searchJira(query),
+      this.searchDocuments(query)
+    ]);
+
+    return { confluence, jira, documents };
   }
 }
 

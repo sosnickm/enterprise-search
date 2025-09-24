@@ -5,12 +5,29 @@ import { FilterPanel, FilterOptions } from "./components/FilterPanel";
 import { SearchResults } from "./components/SearchResults";
 import { ActiveFilters } from "./components/ActiveFilters";
 import { SettingsPanel } from "./components/SettingsPanel";
+import { DocumentUpload, DocumentList } from "./components/DocumentManager";
+import { DocumentSearchResults } from "./components/DocumentSearchResults";
 import { Button } from "./components/ui/button";
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerTrigger } from "./components/ui/drawer";
-import { Filter, Moon, Sun, X, Settings } from "lucide-react";
+import { Filter, Moon, Sun, X, Settings, FileText, Search } from "lucide-react";
 import { mockResearchData, filterOptions } from "./data/mockData";
 import { useRovo } from "./services/useRovo";
 import type { ResearchItem } from "./components/ResultCard";
+
+interface UploadedDocument {
+  id: string;
+  filename: string;
+  fileType: 'pdf' | 'docx' | 'csv' | 'txt' | 'xlsx' | 'pptx';
+  uploadedAt: string;
+  fileSize: number;
+  extractedText: string;
+  keywords: string[];
+  metadata: {
+    title?: string;
+    author?: string;
+    pages?: number;
+  };
+}
 
 export default function App() {
   const [searchQuery, setSearchQuery] = useState("");
@@ -21,6 +38,8 @@ export default function App() {
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
   const [rovoResults, setRovoResults] = useState<ResearchItem[]>([]);
+  const [uploadedDocuments, setUploadedDocuments] = useState<UploadedDocument[]>([]);
+  const [documentSearchResults, setDocumentSearchResults] = useState<any[]>([]);
   const [isDarkMode, setIsDarkMode] = useState(() => {
     if (typeof window !== 'undefined') {
       return localStorage.getItem('darkMode') === 'true' || 
@@ -180,10 +199,26 @@ export default function App() {
       }
     } else if (query.trim()) {
       setLoading(true);
+      // Search both mock data and documents
+      try {
+        // Search documents if we have any uploaded
+        if (uploadedDocuments.length > 0) {
+          const { simpleDocumentService } = await import('./services/simpleDocumentService');
+          const documentResults = await simpleDocumentService.searchDocuments(query);
+          setDocumentSearchResults(documentResults);
+          console.log('Document search results:', documentResults);
+        } else {
+          setDocumentSearchResults([]);
+        }
+      } catch (error) {
+        console.error('Error searching documents:', error);
+        setDocumentSearchResults([]);
+      }
       // Simulate API call delay for mock data
       setTimeout(() => setLoading(false), 500);
     } else {
       setLoading(false);
+      setDocumentSearchResults([]);
       // When search is cleared, the useEffect will handle loading recent content
     }
   };
@@ -194,6 +229,11 @@ export default function App() {
   };
 
   const hasActiveFilters = Object.values(activeFilters).some(arr => arr.length > 0);
+
+  const handleDocumentUploaded = (document: UploadedDocument) => {
+    setUploadedDocuments(prev => [document, ...prev]);
+    console.log('Document uploaded:', document);
+  };
 
   return (
     <div className="min-h-screen bg-background">
@@ -345,16 +385,73 @@ export default function App() {
         </div>
       </div>
 
-      {/* Results Section */}
-      <div className="max-w-7xl mx-auto px-5 py-8">
-        <SearchResults 
-          results={filteredResults}
-          loading={loading}
-          searchQuery={searchQuery}
-          currentPage={currentPage}
-          itemsPerPage={itemsPerPage}
-          onPageChange={handlePageChange}
-        />
+      {/* Main Content Section */}
+      <div className="max-w-7xl mx-auto px-5 py-8 space-y-12">
+        {/* Search Results Section */}
+        <section>
+          <div className="flex items-center gap-3 mb-6">
+            <div className="bg-blue-500/10 p-2 rounded-lg">
+              <Search className="h-5 w-5 text-blue-500" />
+            </div>
+            <div>
+              <h2 className="text-xl font-semibold text-foreground">Search Results</h2>
+              <p className="text-sm text-muted-foreground">
+                {rovo.isConfigured 
+                  ? "Search across your Confluence and Jira content" 
+                  : "Search through research repository (mock data)"}
+              </p>
+            </div>
+          </div>
+          
+          <div className="space-y-8">
+            {/* Document Search Results */}
+            {documentSearchResults.length > 0 && (
+              <DocumentSearchResults 
+                results={documentSearchResults}
+                query={searchQuery}
+              />
+            )}
+            
+            {/* Regular Search Results */}
+            <SearchResults 
+              results={filteredResults}
+              loading={loading}
+              searchQuery={searchQuery}
+              currentPage={currentPage}
+              itemsPerPage={itemsPerPage}
+              onPageChange={handlePageChange}
+            />
+          </div>
+        </section>
+
+        {/* Documents Section */}
+        <section className="border-t border-border pt-12">
+          <div className="flex items-center justify-between mb-6">
+            <div className="flex items-center gap-3">
+              <div className="bg-green-500/10 p-2 rounded-lg">
+                <FileText className="h-5 w-5 text-green-500" />
+              </div>
+              <div>
+                <h2 className="text-xl font-semibold text-foreground">Document Management</h2>
+                <p className="text-sm text-muted-foreground">
+                  Upload and manage your documents for AI-powered search
+                </p>
+              </div>
+            </div>
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              <FileText className="h-4 w-4" />
+              <span>{uploadedDocuments.length} document{uploadedDocuments.length !== 1 ? 's' : ''}</span>
+            </div>
+          </div>
+          
+          <div className="space-y-8">
+            <div className="flex justify-center">
+              <DocumentUpload onDocumentUploaded={handleDocumentUploaded} />
+            </div>
+            
+            <DocumentList documents={uploadedDocuments} />
+          </div>
+        </section>
       </div>
     </div>
   );

@@ -1,0 +1,40 @@
+## Test Document for AI Search
+
+This is a sample document for testing the AI-powered document search functionality.
+
+### Project Overview
+Our B3S Research Repository project integrates multiple data sources including:
+- Atlassian Confluence pages
+- Jira issues and tickets  
+- Uploaded documents (PDF, Word, Excel, etc.)
+- SharePoint files
+- Monday.com project data
+
+### Key Features
+1. **Semantic Search** - Find documents by meaning, not just keywords
+2. **Vector Embeddings** - Advanced AI understanding of document content
+3. **Cross-Platform Integration** - Search across all your work tools
+4. **Real-time Processing** - Instant text extraction and indexing
+
+### Technical Implementation
+The system uses:
+- Vector databases for semantic similarity
+- Large Language Models for content understanding
+- RAG (Retrieval-Augmented Generation) for enhanced search
+- Local file processing for privacy
+
+### Use Cases
+- Find project documents quickly
+- Discover related content across platforms
+- Search meeting notes and documentation
+- Locate specific data in spreadsheets
+- Access presentation slides and reports
+
+### Benefits
+- Saves time searching for information
+- Improves team collaboration
+- Reduces duplicate work
+- Enables better knowledge sharing
+- Provides unified search experience
+
+This document can be used to test search queries like "project overview", "technical implementation", "vector databases", or "team collaboration".

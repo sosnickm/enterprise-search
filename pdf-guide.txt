@@ -1,0 +1,30 @@
+# PDF Text Extraction Guide
+
+## How to Get the Best Results
+
+### ✅ PDFs That Work Well:
+- Text-based PDFs created from Word, Google Docs, or similar
+- PDFs with selectable text (you can highlight and copy text)
+- Simple layouts without complex formatting
+- Files under 10MB
+
+### ❌ PDFs That May Not Work:
+- Scanned documents (images of text)
+- Password-protected PDFs
+- Complex layouts with embedded graphics
+- Very old PDF formats
+
+### 🔧 If Your PDF Doesn't Extract Text:
+
+1. **Test if it's text-based**: Try selecting and copying text from the PDF in a reader
+2. **Convert scanned PDFs**: Use OCR tools like Adobe Acrobat, Google Drive, or online OCR services
+3. **Save as new PDF**: Open in a PDF viewer and "Print to PDF" to create a cleaner version
+4. **Alternative formats**: Convert to Word (.docx) or save as plain text (.txt)
+
+### 📝 Best Practices:
+- Use searchable PDFs whenever possible
+- Keep file sizes reasonable (under 10MB)
+- Test extraction with a small sample first
+- For bulk uploads, ensure consistent PDF quality
+
+This document demonstrates successful text extraction from a plain text file!

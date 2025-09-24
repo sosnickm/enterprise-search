@@ -1,0 +1,31 @@
+Sample Research Document
+
+Introduction
+This is a sample research document that demonstrates real text extraction capabilities. 
+The document contains various sections with different types of content that should be 
+searchable through our AI-powered document search system.
+
+Key Findings
+1. Text extraction works correctly for plain text files
+2. Document processing includes keyword extraction
+3. Search functionality can find relevant sections
+4. The system supports multiple file formats including PDF, CSV, and Office documents
+
+Research Data
+- Project Timeline: Q1 2024 to Q3 2024
+- Team Members: 5 researchers, 2 analysts
+- Budget: $150,000
+- Success Metrics: Improved search accuracy by 40%
+
+Technical Details
+The implementation uses various text extraction libraries:
+- pdf-parse for PDF documents
+- Custom CSV parsing for structured data
+- Fallback methods for Office documents
+
+Conclusion
+This document demonstrates that real text extraction is now working properly,
+replacing the previous simulated content with actual file content extraction.
+The system can handle various document types and extract meaningful, searchable text.
+
+Keywords: research, document, extraction, search, AI, processing, analysis
