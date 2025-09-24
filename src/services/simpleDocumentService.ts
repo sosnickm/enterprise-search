@@ -1,6 +1,8 @@
 // Simple document service for proof of concept
 // This simulates the AI/vector database functionality without external dependencies
 
+import { simpleEmbeddingService } from './simpleEmbeddingService';
+
 interface SimpleDocument {
   id: string;
   filename: string;
@@ -9,6 +11,7 @@ interface SimpleDocument {
   fileSize: number;
   extractedText: string;
   keywords: string[];
+  embedding?: number[]; // Vector embedding for semantic search
   metadata: {
     title?: string;
     author?: string;
@@ -39,6 +42,19 @@ class SimpleDocumentService {
       // Extract text from the document
       const extractedText = await this.realTextExtraction(file, fileExtension);
       
+      // Generate vector embedding for semantic search
+      console.log('🔢 Generating local vector embedding for semantic search...');
+      let embedding: number[] | undefined;
+      try {
+        // Use document ID for better TF-IDF calculation
+        embedding = await simpleEmbeddingService.getEmbedding(extractedText, id);
+        console.log(`✅ Generated ${embedding.length}D local embedding vector`);
+      } catch (error) {
+        const errorMsg = error instanceof Error ? error.message : 'Unknown error';
+        console.warn('⚠️ Failed to generate embedding, document will use keyword search only:', errorMsg);
+        embedding = undefined;
+      }
+      
       const document: SimpleDocument = {
         id,
         filename: file.name,
@@ -47,6 +63,7 @@ class SimpleDocumentService {
         fileSize: file.size,
         extractedText,
         keywords: this.extractKeywords(extractedText),
+        embedding, // Include vector embedding
         metadata: {
           title: file.name.replace(/\.[^/.]+$/, ''),
           pages: Math.floor(Math.random() * 20) + 1
@@ -56,7 +73,11 @@ class SimpleDocumentService {
       // Store the document
       this.documents.set(id, document);
       
+      // Update embedding service vocabulary for better semantic search
+      simpleEmbeddingService.updateVocabulary();
+      
       console.log(`Successfully processed document: ${file.name} (${fileExtension}, ${this.formatFileSize(file.size)})`);
+      console.log(`📊 Total documents in collection: ${this.documents.size}`);
       
       return {
         success: true,
@@ -75,6 +96,7 @@ class SimpleDocumentService {
   async searchDocuments(query: string): Promise<{
     document: SimpleDocument;
     score: number;
+    searchType: 'semantic' | 'keyword' | 'hybrid';
     matchedSections: Array<{
       text: string;
       context: string;
@@ -84,9 +106,26 @@ class SimpleDocumentService {
       return [];
     }
 
+    console.log(`🔍 Starting search for: "${query}"`);
+    
+    // Generate query embedding for semantic search
+    let queryEmbedding: number[] | null = null;
+    let embeddingError: string | null = null;
+    
+    try {
+      console.log('🔍 Generating query embedding using local service...');
+      queryEmbedding = await simpleEmbeddingService.getEmbedding(query);
+      console.log('✅ Generated query embedding for local semantic search');
+    } catch (error) {
+      embeddingError = error instanceof Error ? error.message : 'Unknown error';
+      console.warn('⚠️ Local embedding service failed, using keyword search only:', embeddingError);
+      queryEmbedding = null;
+    }
+
     const results: Array<{
       document: SimpleDocument;
       score: number;
+      searchType: 'semantic' | 'keyword' | 'hybrid';
       matchedSections: Array<{
         text: string;
         context: string;
@@ -96,14 +135,26 @@ class SimpleDocumentService {
     const queryLower = query.toLowerCase();
     
     for (const document of this.documents.values()) {
-      
-      // Simple text matching (in real implementation, this would use vector similarity)
-      let score = 0;
+      let semanticScore = 0;
+      let keywordScore = 0;
       let matches: Array<{ text: string; context: string; }> = [];
       
+      // Semantic search using vector embeddings
+      if (queryEmbedding && document.embedding) {
+        try {
+          semanticScore = simpleEmbeddingService.cosineSimilarity(queryEmbedding, document.embedding);
+          console.log(`📊 Local semantic similarity for "${document.filename}": ${semanticScore.toFixed(3)}`);
+        } catch (error) {
+          console.warn('⚠️ Error calculating semantic similarity:', error);
+          semanticScore = 0;
+        }
+      }
+      
+      // Traditional keyword search (as fallback and supplement)
       // Check title match
       if (document.filename.toLowerCase().includes(queryLower)) {
-        score += 0.5;
+        keywordScore += 0.3;
+        console.log(`✅ Filename match for "${document.filename}" with query "${query}"`);
       }
       
       // Check keyword matches
@@ -111,31 +162,82 @@ class SimpleDocumentService {
         keyword.toLowerCase().includes(queryLower) || 
         queryLower.includes(keyword.toLowerCase())
       );
-      score += keywordMatches.length * 0.2;
+      keywordScore += keywordMatches.length * 0.15;
+      if (keywordMatches.length > 0) {
+        console.log(`✅ Keyword matches for "${document.filename}":`, keywordMatches);
+      }
       
       // Check content matches
       const sentences = document.extractedText.split(/[.!?]+/).filter(s => s.trim().length > 0);
+      let contentMatches = 0;
       for (const sentence of sentences) {
         if (sentence.toLowerCase().includes(queryLower)) {
-          score += 0.3;
+          keywordScore += 0.2;
+          contentMatches++;
           matches.push({
             text: sentence.trim(),
             context: sentence.trim()
           });
         }
       }
+      if (contentMatches > 0) {
+        console.log(`✅ Content matches for "${document.filename}": ${contentMatches} sentences`);
+      } else {
+        console.log(`❌ No content matches for "${document.filename}" with query "${query}"`);
+        console.log(`📄 Document preview (first 200 chars):`, document.extractedText.substring(0, 200));
+        console.log(`🏷️ Document keywords:`, document.keywords);
+      }
       
-      if (score > 0) {
+      // Determine search type and final score
+      let finalScore = 0;
+      let searchType: 'semantic' | 'keyword' | 'hybrid' = 'keyword';
+      
+      if (semanticScore > 0 && keywordScore > 0) {
+        // Hybrid: combine both scores with semantic weighted higher
+        finalScore = (semanticScore * 0.7) + (keywordScore * 0.3);
+        searchType = 'hybrid';
+      } else if (semanticScore > 0) {
+        // Semantic only
+        finalScore = semanticScore;
+        searchType = 'semantic';
+      } else if (keywordScore > 0) {
+        // Keyword only
+        finalScore = Math.min(keywordScore, 1.0);
+        searchType = 'keyword';
+      }
+      
+      console.log(`🔍 "${document.filename}": semantic=${semanticScore.toFixed(3)}, keyword=${keywordScore.toFixed(3)}, final=${finalScore.toFixed(3)}, type=${searchType}`);
+      
+      // Set minimum threshold - be more lenient for semantic matches
+      let threshold = 0.1; // Base threshold for keyword matches
+      if (searchType === 'semantic') {
+        threshold = 0.15; // Slightly higher for semantic-only to avoid noise
+      } else if (searchType === 'hybrid') {
+        threshold = 0.1; // Lower for hybrid since it has both semantic and keyword signals
+      }
+      
+      console.log(`🎯 "${document.filename}": threshold=${threshold}, passed=${finalScore > threshold}`);
+      
+      if (finalScore > threshold) {
         results.push({
           document,
-          score: Math.min(score, 1), // Cap at 1.0
+          score: finalScore,
+          searchType,
           matchedSections: matches.slice(0, 3) // Top 3 matches
         });
       }
     }
     
-    // Sort by score
-    return results.sort((a, b) => b.score - a.score).slice(0, 10);
+    // Sort by score (highest first)
+    const sortedResults = results.sort((a, b) => b.score - a.score).slice(0, 10);
+    
+    console.log(`📊 Search results summary:
+      - Total matches: ${sortedResults.length}
+      - Semantic matches: ${sortedResults.filter(r => r.searchType === 'semantic').length}
+      - Keyword matches: ${sortedResults.filter(r => r.searchType === 'keyword').length}
+      - Hybrid matches: ${sortedResults.filter(r => r.searchType === 'hybrid').length}`);
+    
+    return sortedResults;
   }
 
   async getAllDocuments(): Promise<SimpleDocument[]> {

@@ -60,6 +60,14 @@ const sourceIcons: Record<string, React.ReactNode> = {
       <circle cx="12" cy="8" r="1" fill="#FF6900"/>
     </svg>
   ),
+  "document": (
+    <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none">
+      <rect width="24" height="24" rx="4" fill="#10B981"/>
+      <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6z" fill="white" stroke="#10B981" strokeWidth="1"/>
+      <path d="M14 2v6h6" fill="none" stroke="#10B981" strokeWidth="1"/>
+      <path d="M16 13H8M16 17H8M10 9H8" stroke="#10B981" strokeWidth="1"/>
+    </svg>
+  ),
 };
 
 export function ResultCard({ item }: ResultCardProps) {

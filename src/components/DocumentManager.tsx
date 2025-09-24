@@ -1,6 +1,6 @@
 import React, { useState, useCallback } from 'react';
 import { Upload, File, FileText, AlertCircle, CheckCircle2, Loader2 } from 'lucide-react';
-import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
+import { Card, CardContent } from './ui/card';
 import { Alert, AlertDescription } from './ui/alert';
 import { Badge } from './ui/badge';
 
@@ -105,95 +105,66 @@ export function DocumentUpload({ onDocumentUploaded }: DocumentUploadProps) {
 
 
   return (
-    <Card className="w-full max-w-md bg-green-50/50 dark:bg-green-950/20 border-green-200/50 dark:border-green-800/30">
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2 text-green-900 dark:text-green-100">
-          <div className="bg-green-500/10 p-1.5 rounded-md">
-            <Upload className="h-4 w-4 text-green-500" />
-          </div>
-          Upload Documents
-        </CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-4">
-        <div
-          className={`
-            border-2 border-dashed rounded-lg p-6 text-center transition-colors
-            ${isDragging ? 'border-green-400 bg-green-50 dark:bg-green-950/30' : 'border-green-200 dark:border-green-700'}
-            ${isUploading ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer hover:border-green-400 hover:bg-green-50 dark:hover:bg-green-950/30'}
-          `}
-          onDragOver={handleDragOver}
-          onDragLeave={handleDragLeave}
-          onDrop={handleDrop}
-          onClick={() => {
-            if (!isUploading) {
-              document.getElementById('file-input')?.click();
-            }
-          }}
-        >
-          <input
-            id="file-input"
-            type="file"
-            className="hidden"
-            accept=".pdf,.docx,.csv,.txt,.xlsx,.pptx"
-            onChange={handleFileSelect}
-            disabled={isUploading}
-          />
-          
-          <div className="space-y-2">
-            {isUploading ? (
-              <>
-                <Loader2 className="h-12 w-12 text-green-500 animate-spin mx-auto" />
-                <p className="text-sm text-green-600 dark:text-green-400">Processing document...</p>
-              </>
-            ) : (
-              <>
-                <FileText className="h-12 w-12 text-green-400 mx-auto" />
-                <div>
-                  <p className="text-sm font-medium text-green-800 dark:text-green-200">
-                    Drop your document here or click to browse
-                  </p>
-                  <p className="text-xs text-green-600 dark:text-green-400">
-                    PDF, Word, CSV, Excel, PowerPoint, Text files
-                  </p>
-                </div>
-              </>
-            )}
-          </div>
+    <div className="w-full max-w-sm">
+      <div
+        className={`
+          border-2 border-dashed rounded-lg p-4 text-center transition-colors
+          ${isDragging ? 'border-green-400 bg-green-50 dark:bg-green-950/30' : 'border-green-200 dark:border-green-700'}
+          ${isUploading ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer hover:border-green-400 hover:bg-green-50 dark:hover:bg-green-950/30'}
+        `}
+        onDragOver={handleDragOver}
+        onDragLeave={handleDragLeave}
+        onDrop={handleDrop}
+        onClick={() => {
+          if (!isUploading) {
+            document.getElementById('file-input')?.click();
+          }
+        }}
+      >
+        <input
+          id="file-input"
+          type="file"
+          className="hidden"
+          accept=".pdf,.docx,.csv,.txt,.xlsx,.pptx"
+          onChange={handleFileSelect}
+          disabled={isUploading}
+        />
+        
+        <div className="space-y-2">
+          {isUploading ? (
+            <>
+              <Loader2 className="h-8 w-8 text-green-500 animate-spin mx-auto" />
+              <p className="text-xs text-green-600 dark:text-green-400">Processing...</p>
+            </>
+          ) : (
+            <>
+              <Upload className="h-8 w-8 text-green-400 mx-auto" />
+              <div>
+                <p className="text-sm font-medium text-green-800 dark:text-green-200">
+                  Drop files or click to browse
+                </p>
+                <p className="text-xs text-green-600 dark:text-green-400">
+                  PDF, Word, CSV, Excel, PowerPoint, Text
+                </p>
+              </div>
+            </>
+          )}
         </div>
+      </div>
 
-        {uploadStatus.type && (
-          <Alert className={uploadStatus.type === 'error' ? 'border-destructive' : 'border-green-500'}>
-            {uploadStatus.type === 'error' ? (
-              <AlertCircle className="h-4 w-4" />
-            ) : (
-              <CheckCircle2 className="h-4 w-4 text-green-600" />
-            )}
-            <AlertDescription className={uploadStatus.type === 'error' ? 'text-destructive' : 'text-green-700'}>
-              {uploadStatus.message}
-            </AlertDescription>
-          </Alert>
-        )}
-
-        <div className="text-xs text-green-600 dark:text-green-400 space-y-2">
-          <p className="font-medium">Supported formats:</p>
-          <div className="flex flex-wrap gap-1">
-            {['PDF', 'Word', 'Excel', 'PowerPoint', 'CSV', 'Text'].map(format => (
-              <Badge key={format} variant="outline" className="text-xs text-green-600 dark:text-green-400 border-green-200 dark:border-green-800">
-                {format}
-              </Badge>
-            ))}
-          </div>
-          <div className="bg-green-50 dark:bg-green-950/30 p-2 rounded text-xs">
-            <p className="font-medium text-green-800 dark:text-green-200 mb-1">💡 PDF Tips:</p>
-            <ul className="text-green-700 dark:text-green-300 space-y-0.5 text-xs">
-              <li>• Text-based PDFs work best</li>
-              <li>• Test: Can you select/copy text in the PDF?</li>
-              <li>• Scanned PDFs may need conversion</li>
-            </ul>
-          </div>
-        </div>
-      </CardContent>
-    </Card>
+      {uploadStatus.type && (
+        <Alert className={`mt-3 ${uploadStatus.type === 'error' ? 'border-destructive' : 'border-green-500'}`}>
+          {uploadStatus.type === 'error' ? (
+            <AlertCircle className="h-4 w-4" />
+          ) : (
+            <CheckCircle2 className="h-4 w-4 text-green-600" />
+          )}
+          <AlertDescription className={uploadStatus.type === 'error' ? 'text-destructive' : 'text-green-700'}>
+            {uploadStatus.message}
+          </AlertDescription>
+        </Alert>
+      )}
+    </div>
   );
 }
 

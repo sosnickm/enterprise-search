@@ -1,5 +1,5 @@
 import React from 'react';
-import { FileText, Clock, Hash } from 'lucide-react';
+import { FileText, Clock, Hash, Brain, Search, Zap } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Badge } from './ui/badge';
 
@@ -19,6 +19,7 @@ interface DocumentSearchResult {
     };
   };
   score: number;
+  searchType: 'semantic' | 'keyword' | 'hybrid';
   matchedSections: Array<{
     text: string;
     context: string;
@@ -47,8 +48,43 @@ export function DocumentSearchResults({ results, query }: DocumentSearchResultsP
     return new Date(dateString).toLocaleDateString();
   };
 
-  const getFileTypeIcon = (fileType: string) => {
-    return <FileText className="h-4 w-4 text-blue-500" />;
+  const getSearchTypeIcon = (searchType: string) => {
+    switch (searchType) {
+      case 'semantic':
+        return <Brain className="h-3 w-3 text-purple-500" />;
+      case 'keyword':
+        return <Search className="h-3 w-3 text-blue-500" />;
+      case 'hybrid':
+        return <Zap className="h-3 w-3 text-green-500" />;
+      default:
+        return <Search className="h-3 w-3 text-gray-500" />;
+    }
+  };
+
+  const getSearchTypeLabel = (searchType: string) => {
+    switch (searchType) {
+      case 'semantic':
+        return 'Local AI';
+      case 'keyword':
+        return 'Keyword';
+      case 'hybrid':
+        return 'Hybrid AI';
+      default:
+        return 'Unknown';
+    }
+  };
+
+  const getSearchTypeBadgeVariant = (searchType: string): "default" | "secondary" | "destructive" | "outline" => {
+    switch (searchType) {
+      case 'semantic':
+        return 'default';
+      case 'keyword':
+        return 'secondary';
+      case 'hybrid':
+        return 'default';
+      default:
+        return 'outline';
+    }
   };
 
   const highlightText = (text: string, query: string): React.ReactNode => {
@@ -67,25 +103,39 @@ export function DocumentSearchResults({ results, query }: DocumentSearchResultsP
   };
 
   return (
-    <div className="bg-blue-50/30 dark:bg-blue-950/20 border border-blue-200/50 dark:border-blue-800/30 rounded-xl p-6 space-y-4">
+      <div className="bg-blue-50/30 dark:bg-blue-950/20 border border-blue-200/50 dark:border-blue-800/30 rounded-xl p-6 space-y-4">
       <div className="flex items-center gap-2">
         <div className="bg-blue-500/10 p-2 rounded-lg">
           <FileText className="h-5 w-5 text-blue-500" />
         </div>
-        <div>
+        <div className="flex-1">
           <h3 className="text-lg font-semibold text-blue-900 dark:text-blue-100">Document Search Results</h3>
           <p className="text-sm text-blue-700 dark:text-blue-300">
-            AI-powered search found {results.length} relevant document{results.length !== 1 ? 's' : ''}
+            Local AI semantic search found {results.length} relevant document{results.length !== 1 ? 's' : ''}
           </p>
         </div>
-      </div>
-      
-      {results.map((result) => (
+        {/* AI Status Indicator */}
+        <div className="text-right">
+          <div className="flex items-center gap-1 text-xs text-blue-600 dark:text-blue-400">
+            {results.some(r => r.searchType === 'semantic' || r.searchType === 'hybrid') ? (
+              <>
+                <Brain className="h-3 w-3 text-green-500" />
+                <span>Local AI</span>
+              </>
+            ) : (
+              <>
+                <Search className="h-3 w-3 text-orange-500" />
+                <span>Keyword Only</span>
+              </>
+            )}
+          </div>
+        </div>
+      </div>      {results.map((result) => (
         <Card key={result.document.id} className="hover:shadow-md transition-shadow">
           <CardHeader className="pb-3">
             <div className="flex items-start justify-between">
               <div className="flex items-start space-x-3 flex-1">
-                {getFileTypeIcon(result.document.fileType)}
+                <FileText className="h-4 w-4 text-blue-500 mt-0.5 flex-shrink-0" />
                 <div className="flex-1 min-w-0">
                   <CardTitle className="text-base truncate">
                     {highlightText(result.document.filename, query)}
@@ -105,8 +155,14 @@ export function DocumentSearchResults({ results, query }: DocumentSearchResultsP
                 </div>
               </div>
               <div className="text-right">
+                <div className="flex items-center gap-2 mb-1">
+                  <Badge variant={getSearchTypeBadgeVariant(result.searchType)} className="text-xs">
+                    {getSearchTypeIcon(result.searchType)}
+                    <span className="ml-1">{getSearchTypeLabel(result.searchType)}</span>
+                  </Badge>
+                </div>
                 <div className="text-xs text-muted-foreground">
-                  Match: {Math.round(result.score * 100)}%
+                  {Math.round(result.score * 100)}% match
                 </div>
               </div>
             </div>

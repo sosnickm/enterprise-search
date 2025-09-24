@@ -1,0 +1,19 @@
+Sample Technology Document
+
+Introduction to Cloud Computing
+
+Cloud computing is a model for enabling ubiquitous, convenient, on-demand network access to a shared pool of configurable computing resources (e.g., networks, servers, storage, applications, and services) that can be rapidly provisioned and released with minimal management effort or service provider interaction.
+
+Key Benefits:
+- Cost Efficiency: Reduces capital expenditure on hardware and software
+- Scalability: Resources can be scaled up or down based on demand
+- Reliability: Built-in redundancy and backup systems
+- Security: Enterprise-grade security measures and compliance
+- Accessibility: Access from anywhere with internet connection
+
+Cloud Service Models:
+1. Infrastructure as a Service (IaaS)
+2. Platform as a Service (PaaS)  
+3. Software as a Service (SaaS)
+
+This document demonstrates successful text extraction and should be easily searchable using keywords like "computing", "infrastructure", "scalability", or "security".
