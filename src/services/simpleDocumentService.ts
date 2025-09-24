@@ -192,13 +192,21 @@ class SimpleDocumentService {
       let finalScore = 0;
       let searchType: 'semantic' | 'keyword' | 'hybrid' = 'keyword';
       
-      if (semanticScore > 0 && keywordScore > 0) {
+      // Set minimum thresholds to avoid noise
+      const minSemanticScore = 0.18; // Slightly lower threshold - should exclude 0.175 but include 0.275+
+      const effectiveSemanticScore = semanticScore > minSemanticScore ? semanticScore : 0;
+      
+      if (semanticScore > 0 && semanticScore <= minSemanticScore) {
+        console.log(`🚫 Semantic score ${semanticScore.toFixed(3)} below minimum threshold ${minSemanticScore} - treating as 0`);
+      }
+      
+      if (effectiveSemanticScore > 0 && keywordScore > 0) {
         // Hybrid: combine both scores with semantic weighted higher
-        finalScore = (semanticScore * 0.7) + (keywordScore * 0.3);
+        finalScore = (effectiveSemanticScore * 0.7) + (keywordScore * 0.3);
         searchType = 'hybrid';
-      } else if (semanticScore > 0) {
+      } else if (effectiveSemanticScore > 0) {
         // Semantic only
-        finalScore = semanticScore;
+        finalScore = effectiveSemanticScore;
         searchType = 'semantic';
       } else if (keywordScore > 0) {
         // Keyword only
@@ -206,7 +214,7 @@ class SimpleDocumentService {
         searchType = 'keyword';
       }
       
-      console.log(`🔍 "${document.filename}": semantic=${semanticScore.toFixed(3)}, keyword=${keywordScore.toFixed(3)}, final=${finalScore.toFixed(3)}, type=${searchType}`);
+      console.log(`🔍 "${document.filename}": semantic=${semanticScore.toFixed(3)} (effective=${effectiveSemanticScore.toFixed(3)}), keyword=${keywordScore.toFixed(3)}, final=${finalScore.toFixed(3)}, type=${searchType}`);
       
       // Set minimum threshold - be more lenient for semantic matches
       let threshold = 0.1; // Base threshold for keyword matches
@@ -216,15 +224,18 @@ class SimpleDocumentService {
         threshold = 0.1; // Lower for hybrid since it has both semantic and keyword signals
       }
       
-      console.log(`🎯 "${document.filename}": threshold=${threshold}, passed=${finalScore > threshold}`);
+      console.log(`🎯 "${document.filename}": threshold=${threshold}, passed=${finalScore > threshold} (finalScore=${finalScore.toFixed(3)})`);
       
       if (finalScore > threshold) {
+        console.log(`✅ Document "${document.filename}" INCLUDED in results`);
         results.push({
           document,
           score: finalScore,
           searchType,
           matchedSections: matches.slice(0, 3) // Top 3 matches
         });
+      } else {
+        console.log(`❌ Document "${document.filename}" EXCLUDED (score ${finalScore.toFixed(3)} ≤ threshold ${threshold})`);
       }
     }
     

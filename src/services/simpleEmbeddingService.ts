@@ -58,6 +58,7 @@ class SimpleEmbeddingService {
   // Expand query terms with semantically related words
   private expandSemanticTerms(words: string[]): string[] {
     const expandedWords = [...words];
+    const originalCount = words.length;
     
     words.forEach(word => {
       // Check if this word is a semantic concept that maps to other words
@@ -75,7 +76,17 @@ class SimpleEmbeddingService {
       });
     });
     
-    return [...new Set(expandedWords)]; // Remove duplicates
+    const uniqueExpanded = [...new Set(expandedWords)]; // Remove duplicates
+    const addedCount = uniqueExpanded.length - originalCount;
+    
+    if (addedCount > 0) {
+      console.log(`🔄 Query expansion: ${originalCount} original → ${uniqueExpanded.length} expanded (added ${addedCount} semantic terms)`);
+      console.log(`📝 Final expanded query:`, uniqueExpanded);
+    } else {
+      console.log(`📝 No semantic expansion for terms:`, words);
+    }
+    
+    return uniqueExpanded;
   }
 
   private calculateTFIDF(words: string[]): WordFrequency {
