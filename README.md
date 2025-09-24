@@ -1,11 +1,33 @@
 
 # B3S Research Repository
 
-A modern, AI-powered research search application that connects to your Atlassian ecosystem using Rovo to search across Confluence and Jira for real-time data access.
+A modern, **AI-powered research search application** with local semantic search capabilities that connects to your Atlassian ecosystem using Rovo for real-time data access.
+
+## 🧠 NEW: Local Semantic Search
+
+**Revolutionary document search that understands meaning, not just keywords!**
+
+- 🎯 **Conceptual Understanding**: Search "fruit" → finds documents with "apples", "bananas"
+- 🚀 **Local AI**: Works offline, no external APIs needed
+- 🔒 **Privacy-First**: Your documents never leave your machine
+- ⚡ **Fast**: Sub-second search response times
+- 🎨 **Smart**: Combines semantic + keyword matching for best results
+
+**Try it**: Upload a document containing "apples" and search for "fruit" - watch the magic happen!
+
+[📖 **Read the full Semantic Search documentation →**](./SEMANTIC_SEARCH.md)
 
 ## Features
 
-### Core Search
+### Advanced AI Document Search
+- 📄 **Multi-Format Support**: PDF, Word, Excel, PowerPoint, CSV, and text files
+- 🧠 **Semantic Search**: Find documents by meaning and concepts
+- 🤖 **Smart Text Extraction**: AI-powered content extraction from any document
+- 🎯 **Hybrid Matching**: Combines semantic understanding with keyword precision
+- 💡 **Auto Keywords**: Automatic keyword extraction and concept mapping
+- 🔍 **Unified Results**: Documents appear alongside Atlassian search results
+
+### Core Search Platform
 - 🔍 **Unified Search**: Search across multiple data sources from a single interface
 - 🚀 **Atlassian Rovo Integration**: Real-time access to Confluence pages and Jira issues
 - 🌓 **Dark/Light Mode**: Modern UI with theme switching
