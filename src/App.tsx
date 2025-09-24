@@ -232,7 +232,8 @@ export default function App() {
         team: 'Uploaded', // Or could be extracted from metadata
         tags: docResult.document.keywords.slice(0, 5), // Use keywords as tags
         lastUpdated: new Date(docResult.document.uploadedAt).toLocaleDateString(),
-        author: docResult.document.metadata.author || 'Unknown'
+        author: docResult.document.metadata.author || 'Unknown',
+        matchInfo: docResult.matchInfo
       }));
       
       console.log('📄 Converted document results:', documentResults);

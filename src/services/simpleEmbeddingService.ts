@@ -248,6 +248,31 @@ class SimpleEmbeddingService {
       console.log(`📚 Updated vocabulary with ${this.vocabulary.length} unique terms from ${this.totalDocuments} documents`);
     }
   }
+
+  // Get semantic mappings that were triggered for a query
+  getSemanticMappings(query: string): { concept: string; matchedWords: string[] } | undefined {
+    const queryWords = this.preprocessText(query);
+    
+    for (const [concept, mappedWords] of Object.entries(this.semanticMappings)) {
+      const matchingWords = mappedWords.filter(word => 
+        queryWords.includes(word.toLowerCase()) || 
+        queryWords.some(qWord => qWord.includes(word.toLowerCase()) || word.toLowerCase().includes(qWord))
+      );
+      
+      if (matchingWords.length > 0) {
+        console.log(`🔗 Semantic mapping triggered: "${query}" (${concept}) → [${matchingWords.join(', ')}]`);
+        return { concept, matchedWords: matchingWords };
+      }
+      
+      // Also check if the query itself matches a concept
+      if (queryWords.includes(concept)) {
+        console.log(`🔗 Concept match: "${query}" → ${concept} → [${mappedWords.join(', ')}]`);
+        return { concept, matchedWords: mappedWords };
+      }
+    }
+    
+    return undefined;
+  }
 }
 
 export const simpleEmbeddingService = new SimpleEmbeddingService();

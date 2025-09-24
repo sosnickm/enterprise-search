@@ -15,6 +15,15 @@ export interface ResearchItem {
   tags: string[];
   lastUpdated: string;
   author: string;
+  // Match information for semantic search results
+  matchInfo?: {
+    type: 'semantic' | 'keyword' | 'hybrid';
+    score: number;
+    searchQuery?: string;
+    matchedTerms?: string[]; // For keyword matches
+    semanticMapping?: { concept: string; matchedWords: string[] }; // For semantic matches
+    matchedSections?: Array<{ text: string; context: string }>;
+  };
 }
 
 interface ResultCardProps {
@@ -145,6 +154,51 @@ export function ResultCard({ item }: ResultCardProps) {
             </div>
           )}
         </div>
+
+        {/* Match Information */}
+        {item.matchInfo && (
+          <div>
+            <div className="text-xs text-blue-800 font-medium mb-1">Match Reason:</div>
+            <div className="text-xs text-blue-700">
+              {item.matchInfo.type === 'keyword' && (
+                <span>
+                  Keyword match: <strong>{item.matchInfo.matchedTerms?.join(', ')}</strong>
+                  {item.matchInfo.score && ` (${item.matchInfo.score.toFixed(2)})`}
+                </span>
+              )}
+              {item.matchInfo.type === 'semantic' && (
+                <span>
+                  Semantic match: <strong>"{item.matchInfo.searchQuery}"</strong> → 
+                  <strong> {item.matchInfo.semanticMapping?.matchedWords.join(', ')}</strong>
+                  {item.matchInfo.score && ` (${item.matchInfo.score.toFixed(2)})`}
+                </span>
+              )}
+              {item.matchInfo.type === 'hybrid' && (
+                <span>
+                  Combined match
+                  {item.matchInfo.matchedTerms && item.matchInfo.matchedTerms.length > 0 && (
+                    <>: keywords: <strong>{item.matchInfo.matchedTerms.join(', ')}</strong></>
+                  )}
+                  {item.matchInfo.semanticMapping && (
+                    <>; semantic: <strong>"{item.matchInfo.searchQuery}"</strong> → 
+                    <strong> {item.matchInfo.semanticMapping.matchedWords.join(', ')}</strong></>
+                  )}
+                  {item.matchInfo.score && ` (${item.matchInfo.score.toFixed(2)})`}
+                </span>
+              )}
+            </div>
+            {item.matchInfo.matchedSections && item.matchInfo.matchedSections.length > 0 && (
+              <div className="mt-1">
+                <div className="text-xs text-blue-600 font-medium">Matched content:</div>
+                {item.matchInfo.matchedSections.slice(0, 1).map((section, index) => (
+                  <div key={index} className="text-xs text-gray-600 bg-yellow-50 px-2 py-1 mt-1 rounded border border-yellow-200">
+                    "...{section.context.substring(0, 80)}..."
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
         
         {/* Footer Section */}
         <div className="flex items-center justify-between text-xs text-muted-foreground pt-2 border-t border-border mt-auto">

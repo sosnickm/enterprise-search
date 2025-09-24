@@ -101,6 +101,14 @@ class SimpleDocumentService {
       text: string;
       context: string;
     }>;
+    matchInfo?: {
+      type: 'semantic' | 'keyword' | 'hybrid';
+      score: number;
+      searchQuery?: string;
+      matchedTerms?: string[];
+      semanticMapping?: { concept: string; matchedWords: string[] };
+      matchedSections?: Array<{ text: string; context: string }>;
+    };
   }[]> {
     if (!query.trim()) {
       return [];
@@ -130,6 +138,14 @@ class SimpleDocumentService {
         text: string;
         context: string;
       }>;
+      matchInfo?: {
+        type: 'semantic' | 'keyword' | 'hybrid';
+        score: number;
+        searchQuery?: string;
+        matchedTerms?: string[];
+        semanticMapping?: { concept: string; matchedWords: string[] };
+        matchedSections?: Array<{ text: string; context: string }>;
+      };
     }> = [];
 
     const queryLower = query.toLowerCase();
@@ -138,12 +154,19 @@ class SimpleDocumentService {
       let semanticScore = 0;
       let keywordScore = 0;
       let matches: Array<{ text: string; context: string; }> = [];
+      let matchedKeywords: string[] = [];
+      let semanticMapping: { concept: string; matchedWords: string[] } | undefined;
       
       // Semantic search using vector embeddings
       if (queryEmbedding && document.embedding) {
         try {
           semanticScore = simpleEmbeddingService.cosineSimilarity(queryEmbedding, document.embedding);
           console.log(`📊 Local semantic similarity for "${document.filename}": ${semanticScore.toFixed(3)}`);
+          
+          // Get semantic mapping information if there's a good semantic match
+          if (semanticScore > 0.1) {
+            semanticMapping = simpleEmbeddingService.getSemanticMappings(query);
+          }
         } catch (error) {
           console.warn('⚠️ Error calculating semantic similarity:', error);
           semanticScore = 0;
@@ -154,6 +177,7 @@ class SimpleDocumentService {
       // Check title match
       if (document.filename.toLowerCase().includes(queryLower)) {
         keywordScore += 0.3;
+        matchedKeywords.push(document.filename);
         console.log(`✅ Filename match for "${document.filename}" with query "${query}"`);
       }
       
@@ -163,6 +187,7 @@ class SimpleDocumentService {
         queryLower.includes(keyword.toLowerCase())
       );
       keywordScore += keywordMatches.length * 0.15;
+      matchedKeywords.push(...keywordMatches);
       if (keywordMatches.length > 0) {
         console.log(`✅ Keyword matches for "${document.filename}":`, keywordMatches);
       }
@@ -228,11 +253,23 @@ class SimpleDocumentService {
       
       if (finalScore > threshold) {
         console.log(`✅ Document "${document.filename}" INCLUDED in results`);
+        
+        // Create match information
+        const matchInfo = {
+          type: searchType,
+          score: finalScore,
+          searchQuery: query,
+          matchedTerms: matchedKeywords.length > 0 ? matchedKeywords : undefined,
+          semanticMapping: semanticMapping,
+          matchedSections: matches.slice(0, 3)
+        };
+        
         results.push({
           document,
           score: finalScore,
           searchType,
-          matchedSections: matches.slice(0, 3) // Top 3 matches
+          matchedSections: matches.slice(0, 3), // Top 3 matches
+          matchInfo
         });
       } else {
         console.log(`❌ Document "${document.filename}" EXCLUDED (score ${finalScore.toFixed(3)} ≤ threshold ${threshold})`);
